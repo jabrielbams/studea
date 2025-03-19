@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	View,
 	Image,
@@ -20,24 +20,27 @@ import { hp, wp } from "../helpers/common";
 const { width, height } = Dimensions.get("window");
 
 const HomeSplash = () => {
-	const backgroundHeight = useSharedValue(hp(25));
-	const backgroundWidth = useSharedValue(wp(110));
+	const [animationComplete, setAnimationComplete] = useState(false);
+	const [currentTextIndex, setCurrentTextIndex] = useState(0);
+	const textMessages = [
+		'"Kami sedang mempersiapkan hasil yang sesuai dengan potensi dan impian Anda"',
+		'"Mempersonalisasi pilihan untuk Anda..."',
+		'"Rekomendasi sesuai impian Anda sedang kami proses!"',
+		'"Kami berusaha menemukan beasiswa terbaik untuk Anda."',
+	];
+
+	const backgroundHeight = useSharedValue(height);
+	const backgroundWidth = useSharedValue(width);
+	const borderRadius = useSharedValue(0);
 	const logoScale = useSharedValue(1);
-	const logoTranslateY = useSharedValue(-hp(37));
-	const logoOpacity = useSharedValue(1);
-	const textOpacity = useSharedValue(0); // Awalnya tidak terlihat
+	const logoTranslateY = useSharedValue(0);
+	const opacity = useSharedValue(1);
+	const textOpacity = useSharedValue(0);
+	const loadingRotation = useSharedValue(0);
 
 	const onAnimationComplete = () => {
-		setTimeout(() => {
-			logoOpacity.value = withTiming(
-				0,
-				{ duration: 500, easing: Easing.ease },
-				() => {
-					// Ketika logo hilang, munculkan teks "Helo!"
-					textOpacity.value = withTiming(1, { duration: 500, easing: Easing.ease });
-				}
-			);
-		}, 1000);
+		setAnimationComplete(true);
+		textOpacity.value = withTiming(1, { duration: 500 });
 	};
 
 	useEffect(() => {
@@ -47,22 +50,36 @@ const HomeSplash = () => {
 			StatusBar.setHidden(false);
 
 			backgroundHeight.value = withTiming(
-				height,
-				{ duration: 500, easing: Easing.ease },
+				hp(25),
+				{
+					duration: 800,
+					easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+				},
 				() => {
 					runOnJS(onAnimationComplete)();
 				}
 			);
 
-			backgroundWidth.value = withTiming(width, {
-				duration: 500,
-				easing: Easing.ease,
+			backgroundWidth.value = withTiming(wp(110), {
+				duration: 800,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 			});
 
-			logoScale.value = withTiming(1, { duration: 500, easing: Easing.ease });
+			borderRadius.value = withTiming(wp(50), {
+				duration: 800,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+			});
 
-			logoTranslateY.value = withTiming(0, { duration: 500, easing: Easing.ease });
-		}, 10);
+			logoScale.value = withTiming(1, {
+				duration: 800,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+			});
+
+			logoTranslateY.value = withTiming(-hp(37), {
+				duration: 800,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+			});
+		}, 3000);
 
 		return () => {
 			clearTimeout(timer);
@@ -70,11 +87,42 @@ const HomeSplash = () => {
 		};
 	}, []);
 
+	useEffect(() => {
+		if (animationComplete) {
+			let textTimer;
+			textTimer = setInterval(() => {
+				setCurrentTextIndex((prevIndex) => {
+					if (prevIndex < textMessages.length - 1) {
+						return prevIndex + 1;
+					} else {
+						clearInterval(textTimer);
+						return prevIndex;
+					}
+				});
+			}, 3000);
+
+			let rotateTimer = setInterval(() => {
+				loadingRotation.value = withTiming(loadingRotation.value + 360, {
+					duration: 1000,
+					easing: Easing.linear,
+				});
+			}, 1000);
+
+			return () => {
+				clearInterval(textTimer);
+				clearInterval(rotateTimer);
+			};
+		}
+	}, [animationComplete]);
+
 	const backgroundStyle = useAnimatedStyle(() => {
 		return {
 			height: backgroundHeight.value,
 			width: backgroundWidth.value,
+			borderBottomLeftRadius: borderRadius.value,
+			borderBottomRightRadius: borderRadius.value,
 			left: -(backgroundWidth.value - width) / 2,
+			opacity: opacity.value,
 		};
 	});
 
@@ -84,7 +132,7 @@ const HomeSplash = () => {
 				{ scale: logoScale.value },
 				{ translateY: logoTranslateY.value },
 			],
-			opacity: logoOpacity.value,
+			opacity: opacity.value,
 		};
 	});
 
@@ -94,8 +142,19 @@ const HomeSplash = () => {
 		};
 	});
 
+	const loadingStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ rotate: `${loadingRotation.value}deg` }],
+			opacity: textOpacity.value,
+		};
+	});
+
 	return (
-		<View style={styles.container}>
+		<View
+			style={[
+				styles.container,
+				animationComplete && { height: hp(25), bottom: "auto" },
+			]}>
 			<Animated.View style={[styles.background, backgroundStyle]} />
 			<Animated.View style={[styles.logoContainer, logoContainerStyle]}>
 				<Image
@@ -104,7 +163,18 @@ const HomeSplash = () => {
 					resizeMode="contain"
 				/>
 			</Animated.View>
-			<Animated.Text style={[styles.text, textStyle]}>helo!</Animated.Text>
+			{animationComplete && (
+				<View style={styles.textContainer}>
+					<Animated.Text style={[styles.welcomeText, textStyle]}>
+						{textMessages[currentTextIndex]}
+					</Animated.Text>
+					<Animated.Image
+						source={require("../assets/images/loading.png")}
+						style={[styles.loadingIcon, loadingStyle]}
+						resizeMode="contain"
+					/>
+				</View>
+			)}
 		</View>
 	);
 };
@@ -118,7 +188,6 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		zIndex: 100,
 		alignItems: "center",
-		justifyContent: "center",
 		width: width,
 	},
 	background: {
@@ -128,6 +197,7 @@ const styles = StyleSheet.create({
 	},
 	logoContainer: {
 		position: "absolute",
+		top: height / 2 - hp(10),
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -135,12 +205,21 @@ const styles = StyleSheet.create({
 		width: wp(50),
 		height: hp(20),
 	},
-	text: {
+	textContainer: {
 		position: "absolute",
-		fontSize: 24,
+		top: height / 2 + hp(5),
+		alignItems: "center",
+	},
+	welcomeText: {
+		fontSize: wp(4),
+		color: "#1E1E1E",
 		fontWeight: "bold",
-		color: "white",
+		marginBottom: hp(2),
 		textAlign: "center",
+	},
+	loadingIcon: {
+		width: wp(10),
+		height: wp(10),
 	},
 });
 

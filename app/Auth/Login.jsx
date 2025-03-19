@@ -50,7 +50,7 @@ const LoginScreen = () => {
 
           <Button
             title='Login'
-            onPress={() => router.push("Home")}
+            onPress={() => router.push("Quesioner")}
             size='medium'
           />
 

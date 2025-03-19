@@ -38,6 +38,7 @@ export default function RootLayout() {
 								presentation: "card",
 							}}
 						/>
+						<Stack.Screen name="Quisioner" />
 						<Stack.Screen name="Home" />
 					</Stack>
 				</View>

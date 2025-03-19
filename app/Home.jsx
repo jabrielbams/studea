@@ -7,7 +7,6 @@ export default function Home() {
 	return (
 		<>
 			<View style={styles.container}>
-				{/* <p>this is homepage</p> */}
 				<HomeSplash showSplash={true} />
 			</View>
 		</>
