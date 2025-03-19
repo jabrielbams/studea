@@ -40,6 +40,7 @@ export default function RootLayout() {
 						/>
 						<Stack.Screen name="Quisioner" />
 						<Stack.Screen name="Home" />
+						<Stack.Screen name="Result" />
 					</Stack>
 				</View>
 			</TouchableWithoutFeedback>

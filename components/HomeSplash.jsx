@@ -14,12 +14,14 @@ import Animated, {
 	Easing,
 	runOnJS,
 } from "react-native-reanimated";
+import { useNavigation } from "@react-navigation/native";
 import { theme } from "@/constants/theme";
 import { hp, wp } from "../helpers/common";
 
 const { width, height } = Dimensions.get("window");
 
 const HomeSplash = () => {
+	const navigation = useNavigation();
 	const [animationComplete, setAnimationComplete] = useState(false);
 	const [currentTextIndex, setCurrentTextIndex] = useState(0);
 	const textMessages = [
@@ -27,6 +29,7 @@ const HomeSplash = () => {
 		'"Mempersonalisasi pilihan untuk Anda..."',
 		'"Rekomendasi sesuai impian Anda sedang kami proses!"',
 		'"Kami berusaha menemukan beasiswa terbaik untuk Anda."',
+		'"Selesai! membuat laporan hasil"',
 	];
 
 	const backgroundHeight = useSharedValue(height);
@@ -96,6 +99,7 @@ const HomeSplash = () => {
 						return prevIndex + 1;
 					} else {
 						clearInterval(textTimer);
+						runOnJS(navigateToProfiling)();
 						return prevIndex;
 					}
 				});
@@ -114,6 +118,10 @@ const HomeSplash = () => {
 			};
 		}
 	}, [animationComplete]);
+
+	const navigateToProfiling = () => {
+		navigation.replace("Result"); 
+	};
 
 	const backgroundStyle = useAnimatedStyle(() => {
 		return {
