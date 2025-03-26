@@ -5,6 +5,7 @@ export const theme = {
 
     white: "#FAF8FB",
     black: "#1E1E1E",
+    hint: "#888",
   },
   fonts: {
     medium: "500",
